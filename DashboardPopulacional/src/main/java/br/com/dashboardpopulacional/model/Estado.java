@@ -4,28 +4,26 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Estado {
+public class Estado extends Regiao {
 
     private String sigla;
-    private String nome;
     private List<Municipio> municipios;
 
     public Estado(String sigla, String nome) {
-        this.sigla = sigla;
-        this.nome = nome;
+        super(nome);
+        setSigla(sigla);
         this.municipios = new ArrayList<>();
     }
 
     public void adicionarMunicipio(Municipio municipio) {
+        if (municipio == null) {
+            throw new IllegalArgumentException("O município é obrigatório.");
+        }
         municipios.add(municipio);
     }
 
     public String getSigla() {
         return sigla;
-    }
-
-    public String getNome() {
-        return nome;
     }
 
     public List<Municipio> getMunicipios() {
@@ -39,17 +37,15 @@ public class Estado {
         this.sigla = sigla.trim();
     }
 
-    public void setNome(String nome) {
-        if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("O nome do estado é obrigatório.");
-        }
-        this.nome = nome.trim();
-    }
-
     public void setMunicipios(List<Municipio> municipios) {
         if (municipios == null) {
             throw new IllegalArgumentException("A lista de municípios é obrigatória.");
         }
         this.municipios = new ArrayList<>(municipios);
+    }
+
+    @Override
+    public String getTipo() {
+        return "Estado";
     }
 }

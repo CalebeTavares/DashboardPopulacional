@@ -1,5 +1,6 @@
 package br.com.dashboardpopulacional.app;
 
+import br.com.dashboardpopulacional.exception.ArquivoInvalidoException;
 import br.com.dashboardpopulacional.model.Entrada;
 import br.com.dashboardpopulacional.model.Estado;
 import br.com.dashboardpopulacional.model.Indicador;
@@ -25,17 +26,21 @@ public class Main {
             List<Entrada> entradas = LeitorArquivo.ler(caminho);
             CatalogoPopulacional catalogo = new CatalogoPopulacional(entradas);
             executarMenu(catalogo);
-        } catch (IOException | IllegalArgumentException erro) {
+
+        } catch (IOException | IllegalArgumentException | ArquivoInvalidoException erro) {
             System.err.println("Não foi possível carregar os dados: " + erro.getMessage());
             System.exit(1);
         }
     }
 
     private static void executarMenu(CatalogoPopulacional catalogo) {
-        LinkedList<Municipio> municipios = new LinkedList<>(catalogo.listarMunicipiosPorPopulacao());
+        LinkedList<Municipio> municipios = new LinkedList<>(
+                catalogo.listarMunicipiosPorPopulacao()
+        );
 
         try (Scanner scanner = new Scanner(System.in)) {
             int opcao;
+
             do {
                 exibirMenu(municipios);
                 opcao = lerOpcao(scanner);
@@ -45,6 +50,7 @@ public class Main {
                     case 6 -> exibirTodosDados(catalogo.listarEstados());
                     default -> consultarMunicipio(opcao, municipios);
                 }
+
             } while (opcao != 0);
         }
     }
@@ -68,6 +74,7 @@ public class Main {
             scanner.next();
             System.out.print("Opção: ");
         }
+
         return scanner.nextInt();
     }
 
@@ -78,14 +85,17 @@ public class Main {
         }
 
         Municipio municipio = municipios.get(opcao - 1);
+
         System.out.println("\n=== Dados de " + municipio.getNome() + " ===");
         exibirDadosMunicipio(municipio);
     }
 
     private static void exibirTodosDados(List<Estado> estados) {
         System.out.println("\n=== Todos os dados ===");
+
         for (Estado estado : estados) {
             System.out.println("\nEstado: " + estado.getNome() + " (" + estado.getSigla() + ")");
+
             for (Municipio municipio : estado.getMunicipios()) {
                 exibirDadosMunicipio(municipio);
             }
@@ -99,18 +109,26 @@ public class Main {
         System.out.println("  IDH: " + municipio.getIdh());
 
         List<Indicador> indicadores = new ArrayList<>();
-        indicadores.add(new IndicadorPopulacao(municipio.obterPopulacaoMaisRecente()));
-        indicadores.add(new IndicadorSocioeconomico(
-                "IDH de " + municipio.getNome(),
-                municipio.getIdh()
-        ));
+
+        indicadores.add(
+                new IndicadorPopulacao(municipio.obterPopulacaoMaisRecente())
+        );
+
+        indicadores.add(
+                new IndicadorSocioeconomico(
+                        "IDH de " + municipio.getNome(),
+                        municipio.getIdh()
+                )
+        );
 
         System.out.println("  Indicadores:");
+
         for (Indicador indicador : indicadores) {
             System.out.println("  * " + indicador.formatar());
         }
 
         System.out.println("  Histórico populacional:");
+
         for (var populacao : municipio.getPopulacoes()) {
             System.out.println("  * " + populacao.getAno() + ": " + populacao.getQuantidade());
         }

@@ -1,33 +1,9 @@
 package br.com.dashboardpopulacional.model;
 
-public abstract class Indicador {
+public interface Indicador {
 
-    private String nome;
-    private double valor;
+    double calcular();
 
-    protected Indicador(String nome, double valor) {
-        this.nome = nome;
-        this.valor = valor;
-    }
+    String formatar();
 
-    public String getNome() {
-        return nome;
-    }
-
-    public double getValor() {
-        return valor;
-    }
-
-    public void setNome(String nome) {
-        if (nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("O nome do indicador é obrigatório.");
-        }
-        this.nome = nome.trim();
-    }
-
-    public void setValor(double valor) {
-        this.valor = valor;
-    }
-
-    public abstract String formatar();
 }
