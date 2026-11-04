@@ -11,11 +11,15 @@ public class Entrada {
 
     public Entrada(String siglaEstado, String nomeMunicipio, int ano,
                    int populacao, double rendaPerCapita, double idh) {
+
         this.siglaEstado = validarTexto(siglaEstado, "estado");
         this.nomeMunicipio = validarTexto(nomeMunicipio, "município");
-        if (ano <= 0 || populacao < 0 || rendaPerCapita < 0 || idh < 0 || idh > 1) {
-            throw new IllegalArgumentException("Valores numéricos inválidos para a entrada.");
-        }
+
+        validarAno(ano);
+        validarPopulacao(populacao);
+        validarRenda(rendaPerCapita);
+        validarIdh(idh);
+
         this.ano = ano;
         this.populacao = populacao;
         this.rendaPerCapita = rendaPerCapita;
@@ -24,9 +28,42 @@ public class Entrada {
 
     private static String validarTexto(String valor, String campo) {
         if (valor == null || valor.isBlank()) {
-            throw new IllegalArgumentException("O campo " + campo + " é obrigatório.");
+            throw new IllegalArgumentException(
+                    "O campo " + campo + " é obrigatório."
+            );
         }
+
         return valor.trim();
+    }
+
+    private static void validarAno(int ano) {
+        if (ano <= 0) {
+            throw new IllegalArgumentException("O ano deve ser positivo.");
+        }
+    }
+
+    private static void validarPopulacao(int populacao) {
+        if (populacao < 0) {
+            throw new IllegalArgumentException(
+                    "A população não pode ser negativa."
+            );
+        }
+    }
+
+    private static void validarRenda(double renda) {
+        if (!Double.isFinite(renda) || renda < 0) {
+            throw new IllegalArgumentException(
+                    "A renda per capita deve ser válida e não negativa."
+            );
+        }
+    }
+
+    private static void validarIdh(double idh) {
+        if (!Double.isFinite(idh) || idh < 0 || idh > 1) {
+            throw new IllegalArgumentException(
+                    "O IDH deve estar entre 0 e 1."
+            );
+        }
     }
 
     public String getSiglaEstado() {
@@ -62,30 +99,22 @@ public class Entrada {
     }
 
     public void setAno(int ano) {
-        if (ano <= 0) {
-            throw new IllegalArgumentException("O ano deve ser positivo.");
-        }
+        validarAno(ano);
         this.ano = ano;
     }
 
     public void setPopulacao(int populacao) {
-        if (populacao < 0) {
-            throw new IllegalArgumentException("A população não pode ser negativa.");
-        }
+        validarPopulacao(populacao);
         this.populacao = populacao;
     }
 
     public void setRendaPerCapita(double rendaPerCapita) {
-        if (rendaPerCapita < 0) {
-            throw new IllegalArgumentException("A renda per capita não pode ser negativa.");
-        }
+        validarRenda(rendaPerCapita);
         this.rendaPerCapita = rendaPerCapita;
     }
 
     public void setIdh(double idh) {
-        if (idh < 0 || idh > 1) {
-            throw new IllegalArgumentException("O IDH deve estar entre 0 e 1.");
-        }
+        validarIdh(idh);
         this.idh = idh;
     }
 }

@@ -1,5 +1,6 @@
 package br.com.dashboardpopulacional.service;
 
+import br.com.dashboardpopulacional.exception.PersistenciaException;
 import br.com.dashboardpopulacional.model.Entrada;
 
 import java.io.IOException;
@@ -18,52 +19,62 @@ public class RepositorioPopulacional {
 
     private static final String URL = "jdbc:sqlite:dados/populacao.db";
 
-    public void salvarTodos(List<Entrada> entradas) throws SQLException, IOException {
-        Files.createDirectories(Path.of("dados"));
+    public void salvarTodos(List<Entrada> entradas)
+            throws PersistenciaException {
 
-        try (Connection conexao = DriverManager.getConnection(URL)) {
-            criarTabela(conexao);
+        try {
+            Files.createDirectories(Path.of("dados"));
 
-            String sql = """
-                    INSERT INTO populacao (
-                        sigla_estado,
-                        nome_municipio,
-                        ano,
-                        populacao,
-                        renda_per_capita,
-                        idh
-                    ) VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(sigla_estado, nome_municipio, ano)
-                    DO UPDATE SET
-                        populacao = excluded.populacao,
-                        renda_per_capita = excluded.renda_per_capita,
-                        idh = excluded.idh
-                    """;
+            try (Connection conexao = DriverManager.getConnection(URL)) {
+                criarTabela(conexao);
 
-            conexao.setAutoCommit(false);
+                String sql = """
+                        INSERT INTO populacao (
+                            sigla_estado,
+                            nome_municipio,
+                            ano,
+                            populacao,
+                            renda_per_capita,
+                            idh
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(sigla_estado, nome_municipio, ano)
+                        DO UPDATE SET
+                            populacao = excluded.populacao,
+                            renda_per_capita = excluded.renda_per_capita,
+                            idh = excluded.idh
+                        """;
 
-            try (PreparedStatement comando = conexao.prepareStatement(sql)) {
-                for (Entrada entrada : entradas) {
-                    comando.setString(1, entrada.getSiglaEstado());
-                    comando.setString(2, entrada.getNomeMunicipio());
-                    comando.setInt(3, entrada.getAno());
-                    comando.setInt(4, entrada.getPopulacao());
-                    comando.setDouble(5, entrada.getRendaPerCapita());
-                    comando.setDouble(6, entrada.getIdh());
-                    comando.addBatch();
+                conexao.setAutoCommit(false);
+
+                try (PreparedStatement comando = conexao.prepareStatement(sql)) {
+                    for (Entrada entrada : entradas) {
+                        comando.setString(1, entrada.getSiglaEstado());
+                        comando.setString(2, entrada.getNomeMunicipio());
+                        comando.setInt(3, entrada.getAno());
+                        comando.setInt(4, entrada.getPopulacao());
+                        comando.setDouble(5, entrada.getRendaPerCapita());
+                        comando.setDouble(6, entrada.getIdh());
+                        comando.addBatch();
+                    }
+
+                    comando.executeBatch();
+                    conexao.commit();
+
+                } catch (SQLException erro) {
+                    conexao.rollback();
+                    throw erro;
                 }
-
-                comando.executeBatch();
-                conexao.commit();
-
-            } catch (SQLException erro) {
-                conexao.rollback();
-                throw erro;
             }
+
+        } catch (SQLException | IOException erro) {
+            throw new PersistenciaException(
+                    "Não foi possível salvar os dados no banco.",
+                    erro
+            );
         }
     }
 
-    public List<Entrada> buscarTodos() throws SQLException {
+    public List<Entrada> buscarTodos() throws PersistenciaException {
         List<Entrada> entradas = new ArrayList<>();
 
         String sql = """
@@ -92,9 +103,15 @@ public class RepositorioPopulacional {
                     entradas.add(entrada);
                 }
             }
-        }
 
-        return entradas;
+            return entradas;
+
+        } catch (SQLException erro) {
+            throw new PersistenciaException(
+                    "Não foi possível buscar os dados no banco.",
+                    erro
+            );
+        }
     }
 
     private void criarTabela(Connection conexao) throws SQLException {

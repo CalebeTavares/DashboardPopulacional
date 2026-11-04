@@ -1,5 +1,6 @@
 package br.com.dashboardpopulacional.app;
 
+import br.com.dashboardpopulacional.exception.PersistenciaException;
 import br.com.dashboardpopulacional.model.Entrada;
 import br.com.dashboardpopulacional.model.Indicador;
 import br.com.dashboardpopulacional.model.IndicadorPopulacao;
@@ -33,7 +34,6 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -59,8 +59,11 @@ public class Aplicacao extends Application {
 
             dados = repositorio.buscarTodos();
 
-        } catch (SQLException e) {
-            mostrarErro("Erro ao carregar dados", e.getMessage());
+        } catch (PersistenciaException e) {
+            mostrarErro(
+                    "Erro ao carregar dados",
+                    e.getMessage()
+            );
         }
 
         exibirTelaInicial();
